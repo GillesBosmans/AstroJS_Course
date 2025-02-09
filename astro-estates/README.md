@@ -1,1 +1,1 @@
-# Astro JS v3 & WordPress (Astro.js, TailwindCSS & WordPress)
+# Astro JS v4 & WordPress
