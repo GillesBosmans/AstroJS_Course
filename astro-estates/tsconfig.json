@@ -10,5 +10,7 @@
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
   }
 }
