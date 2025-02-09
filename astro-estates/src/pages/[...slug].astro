@@ -7,61 +7,111 @@ export async function getStaticPaths() {
   const response = await fetch(`${import.meta.env.WPGRAPHQL_URL}`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "content-type": "application/json",
     },
     body: JSON.stringify({
-		query: `
-		query AllPages {
-			pages(first: 10000){
-				nodes {
-				uri
-				}
-			}
-		}
-		`,
+      query: `
+        query AllPages {
+          pages(first: 10000) {
+            nodes {
+              uri
+              blocks(attributes: false)
+            }
+          }
+          properties(first: 10000) {
+            nodes {
+              uri
+              blocks(attributes: false)
+            }
+          }
+        }
+      `,
     }),
   });
+
   const { data } = await response.json();
-  return data.pages.nodes.map((page: any) => ({
-	params: { slug: page.uri === "/" ? undefined : page.uri },
-  }));
+
+  // Check if the data object is valid and contains the expected fields
+  if (!data || !data.pages || !data.properties) {
+    console.error("Error: Missing expected data fields in the response.");
+    return [];
+  }
+
+  // Use safe fallback if pages or properties are undefined or empty
+  const pages = data.pages.nodes || [];
+  const properties = data.properties.nodes || [];
+
+  console.log("pages:" + pages, "properties:" + properties);
+
+  // Process and filter pages and properties to get paths
+  return [...pages, ...properties]
+    .filter((page: any) => {
+      let found = false;
+
+      const hasPropertySearch = (blocks: Block[]) => {
+        for (let block of blocks) {
+          if (block.name === "astroestates/property-search") {
+            found = true;
+            break;
+          }
+          if (block.innerBlocks) {
+            hasPropertySearch(block.innerBlocks);
+          }
+        }
+      };
+
+      hasPropertySearch(page.blocks || []);
+      return !found;
+    })
+    .map((page: any) => ({
+      params: { slug: page.uri === "/" ? undefined : page.uri },
+    }));
 }
 
 const response = await fetch(`${import.meta.env.WPGRAPHQL_URL}`, {
   method: "POST",
   headers: {
-    "Content-Type": "application/json",
+    "content-type": "application/json",
   },
   body: JSON.stringify({
     query: `
-		query PageQuery($uri: String!) {
-			nodeByUri(uri: $uri) {
-				... on Page {
-								id
-								blocks
-								seo {
-									metaDesc
-									title
-								}
-  				}
-			}
-		}
-	`,
-	variables: {
-		uri: Astro.params.slug || "/",
-	}
+      query PageQuery($uri: String!) {
+        nodeByUri(uri: $uri) {
+          ... on ContentNode {
+            databaseId
+            blocks
+            seo {
+              metaDesc
+              title
+            }
+          }
+        }
+      }
+    `,
+    variables: {
+      uri: (Astro.params as any).slug || "/",
+    },
   }),
 });
 
 const { data } = await response.json();
-//const {blocks, seo} = Astro.props;
+
+// Check if the response contains the expected data
+if (!data || !data.nodeByUri) {
+  console.error("Error: No data found for the given URI.");
+  return;
+}
+
+// Extract the blocks and SEO data
 const blocks = (data.nodeByUri?.blocks || []) as Block[];
-const seo = data.nodeByUri?.seo;
+const seo = data.nodeByUri?.seo || {};
+const postId = data.nodeByUri?.databaseId;
+
 ---
 
 <html lang="en">
   <CommonHead title={seo.title || ""} description={seo.metaDesc || ""} />
   <body>
-    <BlockRenderer blocks={blocks} />
+    <BlockRenderer blocks={blocks} postId={postId} />
   </body>
 </html>

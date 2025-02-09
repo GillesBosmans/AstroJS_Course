@@ -6,11 +6,6 @@ import vercel from "@astrojs/vercel/serverless";
 import robotsTxt from "astro-robots-txt";
 const {PUBLIC_WP_URL} = loadEnv(process.env.NODE_ENV, process.cwd(), "");
 
-// const {
-//   PUBLIC_WP_URL
-// } = loadEnv(process.env.NODE_ENV, process.cwd(), "");
-
-
 // https://astro.build/config
 export default defineConfig({
   image: {

@@ -11,19 +11,45 @@ import { getBlockStyling } from "@wp-block-tools/styles";
 import type { Block } from "@wp-block-tools/styles";
 import { Image } from "astro:assets";
 import SocialLink from "./SocialLink.astro";
+import PropertyDetails from "./PropertyDetails.astro";
+import PropertySearch from "./PropertySearch.astro";
 type Props = {
+    postId: number;
     blocks: Block[];
 };
-const { blocks } = Astro.props;
+const { blocks, postId } = Astro.props;
 ---
 {blocks.map((block) => {
     const { styles, classes } = getBlockStyling(block);
 
     switch (block.name) {
+      case "astroestates/property-search":
+        return (
+          <PropertySearch/>
+        );
+      case "astroestates/property-details":
+        return (
+          <PropertyDetails 
+            bedrooms={block.attributes?.bedrooms} 
+            bathrooms={block.attributes?.bathrooms} 
+            price={block.attributes?.price}
+            postId={postId}>
+            </PropertyDetails>
+        );
+      case "core/gallery":
+        return (
+          <div class={classes} style={styles}>
+            {(block.innerBlocks || []).map((innerBlock) => (
+              <div>
+              <BlockRendererInner blocks={[innerBlock]} postId={postId} />
+              </div>
+            ))}
+          </div>
+        );
       case "astroestates/tick-item":
         return (
           <TickItem>
-              <BlockRendererInner blocks={block.innerBlocks || []} />
+              <BlockRendererInner blocks={block.innerBlocks || []} postId={postId}/>
           </TickItem>
         );
       case "core/image":
@@ -46,9 +72,11 @@ const { blocks } = Astro.props;
             content={block.attributes?.content || ""}>
           </Button>
         );
+      case "core/post-title":
       case "core/heading":
         return (
-          <Heading 
+          <Heading
+            transisionName={block.name === "core/post-title" ? `post-title-${postId}` : ""} 
             level={block.attributes?.level || 2} 
             classes={classes} 
             styles={styles}
@@ -69,7 +97,7 @@ const { blocks } = Astro.props;
           minHeight={block.attributes?.minHeight}
           minHeightUnit={block.attributes?.minHeightUnit}
         >
-           <BlockRendererInner blocks={block.innerBlocks || []} />
+           <BlockRendererInner blocks={block.innerBlocks || []} postId={postId}/>
         </Cover>
       );
       case "core/navigation-submenu":
@@ -80,7 +108,7 @@ const { blocks } = Astro.props;
               label={block.attributes?.label || ""}
               url={block.attributes?.url || ""}
           >
-            <BlockRendererInner blocks={block.innerBlocks || []} />
+            <BlockRendererInner blocks={block.innerBlocks || []} postId={postId}/>
           </NavigationSubmenu>
         );
       case "core/navigation-link":
@@ -95,7 +123,7 @@ const { blocks } = Astro.props;
         case "core/navigation":
           return (
           <Navigation classes={classes} styles={styles}>
-            <BlockRendererInner blocks={block.innerBlocks || []} />
+            <BlockRendererInner blocks={block.innerBlocks || []} postId={postId}/>
           </Navigation>
           );
         case "core/paragraph":
@@ -114,7 +142,7 @@ const { blocks } = Astro.props;
         case "core/social-links":
             return (
                 <div class={classes} style={styles}>
-                    <BlockRendererInner blocks={block.innerBlocks || []} />
+                    <BlockRendererInner blocks={block.innerBlocks || []} postId={postId}/>
                 </div>
             );
             case "core/site-logo":
@@ -138,7 +166,7 @@ const { blocks } = Astro.props;
             );
         case "core/template-part":
             return (
-                <BlockRendererInner blocks={block.innerBlocks || []} />
+                <BlockRendererInner blocks={block.innerBlocks || []} postId={postId}/>
             );
         default:
             return null;

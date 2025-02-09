@@ -5,10 +5,18 @@ type Props = {
     styles: string,
     level: 1 | 2 | 3 | 4 | 5 | 6,
     content: string
+    transisionName: string;
 };
 
-const { classes, styles, level, content } = Astro.props;
+const { classes, styles, level, content, transisionName } = Astro.props;
 const Element: HTMLTag = `h${level}`;
 ---
 
-<Element class={classes} style={styles} set:html={content} />
+{!!transisionName &&
+    <Element transition:name={transisionName} class={classes} style={styles} set:html={content} />
+}
+{
+    !transisionName && (
+    <Element class={classes} style={styles} set:html={content} />
+    )
+}
