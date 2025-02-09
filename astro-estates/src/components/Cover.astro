@@ -38,6 +38,9 @@ if (overlayColor) {
         height={height || 1000} 
         width={width || 1000} 
         src={url} alt=""
+        widths={[240, 540, 720, width || 1000]}
+        quality="low"
+        loading="eager"
     />
     )}
     <div class="absolute top-0 right-0 bottom-0 left-0 !max-w-full !mt-0 bg-black" style={`opacity: ${dimRatio / 100}; ${overlayStyle}`}/>
